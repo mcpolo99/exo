@@ -1,17 +1,20 @@
-FROM python:3.12.8-slim-bookworm AS base
+FROM python:3.12.9-slim-bookworm AS base
 
 # Setup env
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONFAULTHANDLER=1
-ENV PATH=/home/exouser/.local/bin:$PATH
+ENV PATH=/home/exouser/.local/bin:$PATH 
+#"/home/ftuser/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV FT_APP_ENV="docker"
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
 # Prepare environment
 RUN mkdir /exo \
   && apt-get update \
   && apt-get -y install sudo libatlas3-base libopenblas-dev curl sqlite3 libutf8proc-dev libsnappy-dev \
+  curl git sudo build-essential docker.io \
   && apt-get clean \
   && useradd -u 1000 -G sudo -U -m exouser \
   && chown exouser:exouser /exo \
@@ -24,16 +27,15 @@ WORKDIR /exo
 # Install dependencies
 FROM base AS python-deps
 RUN  apt-get update \
-  && apt-get -y install build-essential libssl-dev libffi-dev libgfortran5 pkg-config cmake gcc \
+  && apt-get -y install build-essential libssl-dev libffi-dev libgfortran5 pkg-config cmake gcc git \
   && apt-get clean \
   && echo "[global]\nextra-index-url=https://www.piwheels.org/simple" > /etc/pip.conf
 
 
 # Install dependencies
-COPY --chown=exouser:exouser ../requirements/requirements-base.txt /exo/
+COPY --chown=exouser:exouser requirements/requirements-base.txt /exo/
 USER exouser
-RUN  pip install --user --no-cache-dir "numpy<2" \
-  && pip install --user --no-cache-dir -r requirements-base.txt
+RUN pip install --user --no-cache-dir -r requirements-base.txt
 
 # Copy dependencies to runtime-image
 FROM base AS runtime-image
@@ -46,9 +48,9 @@ USER exouser
 # Install and execute
 COPY --chown=exouser:exouser . /exo/
 
-RUN pip install -e . --user --no-cache-dir --no-build-isolation\
-  && mkdir /exo/user_data/ 
+# RUN pip install -e . --user --no-cache-dir --no-build-isolation\
+#   && mkdir /exo/user_data/ 
 
-ENTRYPOINT ["exo"]
-# Default to trade mode
-CMD [ "exo" ]
+ENTRYPOINT []
+# Default to
+CMD ["sleep", "infinity"]
