@@ -1,35 +1,57 @@
-# Use Ubuntu as the base image
-FROM ubuntu:latest
+FROM python:3.12.9-slim-bookworm AS base
 
-# Set arguments
-ARG USERNAME=exouser
-ARG USER_UID=1001
-ARG USER_GID=$USER_UID
+# Setup env
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONFAULTHANDLER=1
+ENV PATH=/home/exouser/.local/bin:$PATH 
+#"/home/ftuser/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV FT_APP_ENV="docker"
+ENV LD_LIBRARY_PATH=/usr/local/lib
 
-# Install essential tools
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    sudo \
-    build-essential \
-    python3 \
-    python3-pip \
-    docker.io \
-    && rm -rf /var/lib/apt/lists/*
+# Prepare environment
+RUN mkdir /exo \
+  && apt-get update \
+  && apt-get -y install sudo libatlas3-base libopenblas-dev curl sqlite3 libutf8proc-dev libsnappy-dev \
+  curl git sudo build-essential docker.io \
+  && apt-get clean \
+  #dont add user here
+  # && useradd -u 1000 -G sudo -U -m exouser \
+  # && chown exouser:exouser /exo \
+  # # Allow sudoers
+  # && echo "exouser ALL=(ALL) NOPASSWD: /bin/chown" >> /etc/sudoers \
+  && pip install --upgrade pip
 
-# Create a user with sudo privileges
-RUN groupadd --gid $USER_GID $USERNAME && \
-    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
-    echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME
+# WORKDIR /exo
 
-# Set the working directory
-WORKDIR /workspace
+# Install dependencies
+FROM base AS python-deps
+RUN  apt-get update \
+  && apt-get -y install build-essential libssl-dev libffi-dev libgfortran5 pkg-config cmake gcc git \
+  && apt-get clean \
+  && echo "[global]\nextra-index-url=https://www.piwheels.org/simple" > /etc/pip.conf
 
-# Switch to non-root user
-USER $USERNAME
 
-# Set up DevContainer support
-RUN pip install devcontainers
+# # Install dependencies
+# COPY --chown=exouser:exouser requirements/requirements-base.txt /exo/
+# USER exouser
+# RUN pip install --user --no-cache-dir -r requirements-base.txt
 
-# Default command (optional)
-CMD ["bash"]
+# Copy dependencies to runtime-image
+FROM base AS runtime-image
+COPY --from=python-deps /usr/local/lib /usr/local/lib
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
+# COPY --from=python-deps --chown=exouser:exouser /home/exouser/.local /home/exouser/.local
+
+# USER exouser
+# # Install and execute
+# COPY --chown=exouser:exouser . /exo/
+
+# RUN pip install -e . --user --no-cache-dir --no-build-isolation\
+#   && mkdir /exo/user_data/ 
+
+ENTRYPOINT []
+# Default to
+CMD ["sleep", "infinity"]

@@ -1,4 +1,4 @@
-name: Base Container Build and Push
+name: BaseContainer Pre-Build
 
 on:
   workflow_dispatch:
@@ -40,10 +40,10 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: Dockerfile  # Adjust if your Dockerfile is in a different location
+        file: Docker/Dockerfile.base  # Adjust if your Dockerfile is in a different location
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}:latest
-          ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-        cache-from: type=registry,ref=ghcr.io/${{ github.repository }}:cache
+          ghcr.io/${{ github.repository }}-baseimage:latest
+          ghcr.io/${{ github.repository }}-baseimage:${{ github.ref_name }}
+        cache-from: type=registry,ref=ghcr.io/${{ github.repository }}-baseimage:cache
         cache-to: type=inline
