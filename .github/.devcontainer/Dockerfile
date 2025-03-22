@@ -1,4 +1,5 @@
-FROM freqtradeorg/freqtrade:develop_freqairl
+FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu
+#what image should be used????
 
 USER root
 # Install dependencies
