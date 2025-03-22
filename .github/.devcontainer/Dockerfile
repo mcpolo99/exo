@@ -1,4 +1,4 @@
-FROM ghcr.io/mcpolo99/exo:latest
+FROM ghcr.io/mcpolo99/exo-baseimage:latest
 # FROM ghcr.io/mcpolo99/exo:latest
 
 
