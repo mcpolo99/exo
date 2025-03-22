@@ -1,5 +1,7 @@
-FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu
-#what image should be used????
+FROM ghcr.io/${GUSER}/exo:latest
+# FROM ghcr.io/mcpolo99/exo:latest
+
+
 
 USER root
 # Install dependencies

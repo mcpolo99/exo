@@ -23,6 +23,8 @@ jobs:
     permissions:
       packages: write
     runs-on: ubuntu-latest
+    env: 
+      GUSER: ${{ github.actor }}
     steps:
     - uses: actions/checkout@v4
       with:
