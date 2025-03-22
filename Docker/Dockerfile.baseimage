@@ -9,6 +9,12 @@ ENV PATH=/home/exouser/.local/bin:$PATH
 #"/home/ftuser/.local/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV FT_APP_ENV="docker"
 ENV LD_LIBRARY_PATH=/usr/local/lib
+# Set arguments
+ARG USERNAME=exouser
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+USER root
 
 # Prepare environment
 RUN mkdir /exo \
@@ -22,6 +28,11 @@ RUN mkdir /exo \
   # # Allow sudoers
   # && echo "exouser ALL=(ALL) NOPASSWD: /bin/chown" >> /etc/sudoers \
   && pip install --upgrade pip
+  
+# Create a user with sudo privileges
+RUN groupadd --gid $USER_GID $USERNAME && \
+    useradd --uid $USER_UID --gid $USER_GID -G sudo -m $USERNAME && \
+    echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME
 
 # WORKDIR /exo
 
@@ -52,6 +63,6 @@ ENV LD_LIBRARY_PATH=/usr/local/lib
 # RUN pip install -e . --user --no-cache-dir --no-build-isolation\
 #   && mkdir /exo/user_data/ 
 
-ENTRYPOINT []
-# Default to
+# ENTRYPOINT []
+# use this for being able to run base image as is.. 
 CMD ["sleep", "infinity"]

@@ -40,7 +40,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: .
-        file: Docker/Dockerfile.base  # Adjust if your Dockerfile is in a different location
+        file: Docker/Dockerfile.baseimage # Adjust if your Dockerfile is in a different location
         push: true
         tags: |
           ghcr.io/${{ github.repository }}-baseimage:latest
