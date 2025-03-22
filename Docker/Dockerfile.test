@@ -1,0 +1,72 @@
+# Use an official Python image as a base
+FROM python:3.12.7-slim-bookworm AS base
+
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+# Prepare environment
+RUN mkdir /exo \
+  && apt-get update \
+  && apt-get -y install sudo libatlas3-base curl sqlite3 libhdf5-serial-dev libgomp1 wget bash git\
+  && apt-get clean \
+  && useradd -u 1000 -G sudo -U -m -s /bin/bash exouser \
+  && chown exouser:exouser /exo \
+  # Allow sudoers
+  && echo "exouser ALL=(ALL) NOPASSWD: /bin/chown" >> /etc/sudoers
+
+# Set working directory to /exo
+WORKDIR /exo
+# Install GCC if not already installed
+# RUN command -v gcc >/dev/null 2>&1 || apt install -y gcc
+# wait with this since it take time
+# Install CUDA toolkit
+# RUN wget https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb && \
+#     dpkg -i cuda-keyring_1.1-1_all.deb && \
+#     apt-get update && \
+#     apt-get install -y cuda cuda-drivers
+
+
+# Install CUDA toolkit
+# RUN sudo apt-get update && apt-get install -y \
+#     cuda-toolkit-12.8 
+
+USER exouser
+
+# Copy the application files (excluding .venv)
+COPY . /exo/
+COPY <<EOF entrypoint.sh
+#!/bin/bash
+
+source .venv/bin/activate
+
+if [ -n "\${NODE_NAME}" ]; then
+  exo --node-id=\${NODE_NAME} "\$@"
+else
+  exo "\$@"
+fi
+EOF
+
+
+# Change ownership of the copied files to exouser
+RUN sudo chown -R exouser:exouser /exo/
+RUN chmod +x entrypoint.sh
+
+# ENTRYPOINT ["./entrypoint.sh"]
+
+
+
+
+RUN bash -c "\
+    python -m venv .venv && \
+    source .venv/bin/activate && \
+        pip install --upgrade pip && \
+        pip install -e . && \
+    deactivate \
+"
+
+# Expose the exo port
+# EXPOSE 52415/tcp
+
+
+
+# Activate the virtual environment and run exo
+# ENTRYPOINT ["source", ".venv/bin/activate", "&&", "exo"]

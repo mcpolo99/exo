@@ -1,0 +1,35 @@
+# Use Ubuntu as the base image
+FROM ubuntu:latest
+
+# Set arguments
+ARG USERNAME=exouser
+ARG USER_UID=1001
+ARG USER_GID=$USER_UID
+
+# Install essential tools
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    sudo \
+    build-essential \
+    python3 \
+    python3-pip \
+    docker.io \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a user with sudo privileges
+RUN groupadd --gid $USER_GID $USERNAME && \
+    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
+    echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME
+
+# Set the working directory
+WORKDIR /workspace
+
+# Switch to non-root user
+USER $USERNAME
+
+# Set up DevContainer support
+RUN pip install devcontainers
+
+# Default command (optional)
+CMD ["bash"]
